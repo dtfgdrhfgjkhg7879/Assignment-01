@@ -1,48 +1,51 @@
+# Assignment-01
+
 ## Export Software Frontend
 
-Built on top of [fe-zen-arch](git@github.com:shivamkj/fe-zen-arch.git) — the core shared architecture for B2B SaaS frontends.
+Built on top of [fe-zen-arch](https://github.com/shivamkj/fe-zen-arch), the core shared architecture for B2B SaaS frontends.
 
 ### Libraries
 
-- **React** [Docs](https://react.dev/reference/react)
-- **Tailwind CSS** [Docs](https://tailwindcss.com/docs/installation)
-- **React Query** [Docs](https://tanstack.com/query/latest/docs/framework/react/overview)
-- **React Hook Form** [Docs](https://www.react-hook-form.com/get-started)
-- **Zustand** [Docs](https://zustand.docs.pmnd.rs/)
+- **React:** [Documentation](https://react.dev/reference/react)
+- **Tailwind CSS:** [Documentation](https://tailwindcss.com/docs/installation)
+- **React Query:** [Documentation](https://tanstack.com/query/latest/docs/framework/react/overview)
+- **React Hook Form:** [Documentation](https://www.react-hook-form.com/get-started)
+- **Zustand:** [Documentation](https://zustand.docs.pmnd.rs/)
 
 ### Setup
 
 ```bash
-pnpm install   # fe-zen-arch is included as a git submodule, init it first if missing
-pnpm dev       # dev server on port 5173
-pnpm lint      # prettier + tsc + eslint (fe-zen-arch lint pipeline)
-pnpm build     # production build
+pnpm install
+pnpm dev
+pnpm lint
+pnpm build
 ```
+
+The `fe-zen-arch` package is included as a Git submodule.
 
 ### Notes
 
-- `core`, `ui`, `auth`, `icons` are fe-zen-arch workspace packages, aliased via tsconfig paths & vite aliases.
-- Forms are built directly with `useForm` from `core/form` + `Form` / `SubmitButton` from `core/form/components` — no generic form templates.
-- Routing uses fe-zen-arch's zustand router: routes defined in `src/shared/routes.tsx`, paths in `src/shared/route-paths.ts`.
-- Auth uses the fe-zen-arch auth module (routes, interceptors, login pages) out of the box.
-- API base URL comes from `PUBLIC_API_URL` (`.env`).
-- Don't use react-query mutation for react-hook-form submit handler.
-- For HMR (hot refresh), the file must export only react component, and not any other constant or object.
-- While most input elements use `...register('name')`, custom elements like select require `<Select<T> name="name" />` instead.
-### Shipping Bill Form Refactoring
+- `core`, `ui`, `auth`, and `icons` are workspace packages provided by `fe-zen-arch`.
+- Forms use `useForm` from `core/form` and components from `core/form/components`.
+- Routes are defined in `src/shared/routes.tsx`.
+- Authentication uses the `fe-zen-arch` auth module.
+- The API base URL is configured using `PUBLIC_API_URL` in `.env`.
+- Follow the existing project conventions for form submission and hot-module replacement.
 
-The Shipping Bill form has been refactored to improve readability, maintainability, and separation of concerns while preserving the existing application workflow.
+## Shipping Bill Form Refactoring
 
-#### Key Changes
+The Shipping Bill form was refactored to improve readability, maintainability, and separation of concerns while preserving the existing application workflow.
 
-- **Form structure:** Improved form component organization and readability.
-- **Mock services:** Added an asynchronous mock service in `src/shipping-bills/shipping-bill-mock-service.ts` to list shipping bills, retrieve a bill by ID, fetch form options, and save a bill.
-- **Promise-based operations:** Mock service methods return Promises with a simulated delay to represent asynchronous operations.
-- **Data access:** Uses the existing demo store for retrieving and saving shipping bill data.
+### Key Changes
+
+- **Form structure:** Improved component organization and readability.
+- **Mock services:** Added `src/shipping-bills/shipping-bill-mock-service.ts` for listing bills, retrieving a bill by ID, fetching form options, and saving a bill.
+- **Promise-based operations:** Mock service methods return Promises with a simulated delay.
+- **Data access:** Uses the existing demo store to retrieve and save shipping bill data.
 - **Type safety:** Uses TypeScript types for shipping bill values and saved bills.
 - **Dependencies:** No new application dependencies were added.
 
-#### Running the Application
+### Running the Application
 
 ```bash
 pnpm install
@@ -51,9 +54,7 @@ pnpm dev
 
 Open the local URL displayed by Vite, normally `http://localhost:5173`.
 
-#### Validation
-
-Run the following commands to verify the application:
+### Validation
 
 ```bash
 pnpm exec tsc --noEmit
@@ -62,13 +63,14 @@ pnpm build
 
 ### AI Usage & Approach
 
-AI assistance was used to support code review, refactoring, debugging, and documentation.
+AI assistance was used for code review, refactoring, debugging, and documentation.
 
 The approach was to:
+
 1. Inspect the existing application structure and form implementation.
-2. Improve form code readability while retaining the existing UI architecture.
+2. Improve form readability while retaining the existing UI architecture.
 3. Implement an asynchronous mock service using Promises and the existing demo store.
 4. Resolve TypeScript and production build issues.
 5. Run TypeScript checks and a production build to verify compilation.
 
-All changes should be reviewed and tested in the application before submission. AI assistance was used as a development aid; the final implementation and behavior should be verified by the developer.
+AI assistance was used as a development aid. The developer should review the changes and verify the final application behavior before submission.
