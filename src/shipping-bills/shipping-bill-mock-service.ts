@@ -1,18 +1,23 @@
-
 import { getDemoData, saveBill } from './demo-store'
-import { SavedBill, ShippingBillFormValues, loadingPorts, ports } from './model'
+import { loadingPorts, ports } from './model'
+import type { SavedBill, ShippingBillFormValues } from './model'
 
 const MOCK_DELAY_MS = 250
 
-function delay<T>(value: T): Promise<T> {
+function delay<T>(value: T, ms = MOCK_DELAY_MS): Promise<T> {
   return new Promise((resolve) => {
-    setTimeout(() => resolve(value), MOCK_DELAY_MS)
+    setTimeout(() => resolve(value), ms)
   })
 }
 
+/**
+ * API-ready mock service for the Shipping Bill workflow.
+ * Replace these methods with HTTP requests when a backend is available.
+ * UI components should not depend on the underlying data source.
+ */
 export const shippingBillMockService = {
   async list(): Promise<SavedBill[]> {
-    const bills = getDemoData().bills
+    const { bills } = getDemoData()
     return delay([...bills])
   },
 
@@ -39,7 +44,7 @@ export const shippingBillMockService = {
     values: ShippingBillFormValues,
     id?: number
   ): Promise<SavedBill> {
-    const savedBill = saveBill(values, id)
-    return delay(savedBill)
+    await delay(undefined)
+    return saveBill(values, id)
   }
 }

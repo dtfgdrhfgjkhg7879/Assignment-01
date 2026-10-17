@@ -23,8 +23,9 @@ import { Popover, PopoverContent, PopoverTrigger } from 'ui/interactive/popover'
 import { PopoverContext } from 'ui/interactive/popover-context'
 import { Tabs, TabsList, TabsTrigger } from 'ui/interactive/tabs'
 import { clsx, getContext } from 'ui/utils'
-import { getDemoData, saveBill, useDemoData } from './demo-store'
+import { useDemoData } from './demo-store'
 import { shippingBillService } from './shipping-bill-service'
+import { shippingBillMockService } from './shipping-bill-mock-service'
 import { getMarksAndNumbersOptions, MarksAndNumbersOption } from './marks-and-numbers-source'
 import {
   BillInvoiceForm,
@@ -384,13 +385,7 @@ function PartyFields({
   onQuickAdd: () => void
 }) {
   const ownerId = formCtx.hooks.watch(ownerName)
-  const { exporters, businesses } = getDemoData()
-  const owner =
-    kind === 'exporter'
-      ? (exporters.find((party) => String(party.id) === ownerId) ??
-        parties.find((party) => String(party.id) === ownerId))
-      : (businesses.find((party) => String(party.id) === ownerId) ??
-        parties.find((party) => String(party.id) === ownerId))
+  const owner = parties.find((party) => String(party.id) === ownerId)
 
   useEffect(() => {
     const selectedBranch = formCtx.hooks.getValues(branchName)
@@ -1148,6 +1143,7 @@ function BillEditor({ bill }: { bill?: SavedBill }) {
   const { fields: licenses, append: addLicense, remove: removeLicense } = useFieldArray({ control, name: 'licenses' })
   const [activeTab, setActiveTab] = useState('details')
   const [draftId, setDraftId] = useState<number | undefined>(bill?.id)
+  const [isSaving, setIsSaving] = useState(false)
   const [quickAdd, setQuickAdd] = useState<QuickAdd | null>(null)
   const [quickBranch, setQuickBranch] = useState<QuickBranch | null>(null)
   const [marksAndNumbersOptions, setMarksAndNumbersOptions] = useState<MarksAndNumbersOption[]>([])
@@ -1214,24 +1210,20 @@ function BillEditor({ bill }: { bill?: SavedBill }) {
   }, [formState.submitCount, formState.errors])
 
   async function handleSave(data: ShippingBillFormValues) {
-    try {
-      const saved = saveBill(data, draftId)
-      setDraftId(saved.id)
-      console.log('Shipping bill save payload', saved.payload)
+    if (isSaving) return
 
-      // Submit payload to backend API (POST /api/shipping-bills from shipping_bill.http)
-      try {
-        const apiResult = await shippingBillService.upsert(data)
-        console.log('API response from POST /api/shipping-bills:', apiResult)
-      } catch (apiErr) {
-        console.log('Backend API sync notice (saved locally):', apiErr)
-      }
+    setIsSaving(true)
+    try {
+      const saved = await shippingBillMockService.upsert(data, draftId)
+      setDraftId(saved.id)
 
       toast.success(bill ? 'Shipping bill updated' : 'Shipping bill created')
       navigate(routes.toShippingBillEdit(saved.id))
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving shipping bill:', err)
       toast.error('Failed to save shipping bill')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -1690,9 +1682,6 @@ function BillEditor({ bill }: { bill?: SavedBill }) {
                 variant="outline"
                 type="button"
                 onClick={() => {
-                  const current = formCtx.hooks.getValues()
-                  const saved = saveBill(current, draftId)
-                  setDraftId(saved.id)
                   setActiveTab(activeTab === 'documents' ? 'invoices' : 'details')
                 }}>
                 Previous
@@ -1701,19 +1690,30 @@ function BillEditor({ bill }: { bill?: SavedBill }) {
             {activeTab !== 'documents' ? (
               <Button
                 type="button"
-                onClick={(e) => {
+                disabled={isSaving}
+                onClick={async (e) => {
                   e.preventDefault()
-                  const current = formCtx.hooks.getValues()
-                  const saved = saveBill(current, draftId)
-                  setDraftId(saved.id)
-                  toast.success('Details saved')
-                  setActiveTab(activeTab === 'details' ? 'invoices' : 'documents')
+                  if (isSaving) return
+
+                  setIsSaving(true)
+                  try {
+                    const current = formCtx.hooks.getValues()
+                    const saved = await shippingBillMockService.upsert(current, draftId)
+                    setDraftId(saved.id)
+                    toast.success('Progress saved')
+                    setActiveTab(activeTab === 'details' ? 'invoices' : 'documents')
+                  } catch (err: unknown) {
+                    console.error('Error saving shipping bill progress:', err)
+                    toast.error('Failed to save progress')
+                  } finally {
+                    setIsSaving(false)
+                  }
                 }}>
-                Save & Next
+                {isSaving ? 'Saving...' : 'Save & Next'}
               </Button>
             ) : (
-              <Button type="submit">
-                Save changes
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Save changes'}
               </Button>
             )}
           </div>
